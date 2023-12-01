@@ -1,16 +1,29 @@
 import re
+from pathlib import Path
 
 
-def day_1(file: str) -> tuple[int, int]:
+def day_1(file: Path) -> tuple[int, int]:
     with open(file) as f:
         input_values = f.read().split()
 
     calibration_values_part_a = []
     calibration_values_part_b = []
-    number_strings = {"one":"1", "two":"2", "three":"3", "four":"4", "five":"5", "six":"6", "seven":"7", "eight":"8", "nine":"9"}
+    number_strings = {
+        "one": "1",
+        "two": "2",
+        "three": "3",
+        "four": "4",
+        "five": "5",
+        "six": "6",
+        "seven": "7",
+        "eight": "8",
+        "nine": "9",
+    }
     for input_value in input_values:
         digits = re.findall(r"\d", input_value)
-        digits_and_numbers = re.findall(rf"(?=(\d|{'|'.join(number_strings.keys())}))", input_value)
+        digits_and_numbers = re.findall(
+            rf"(?=(\d|{'|'.join(number_strings.keys())}))", input_value
+        )
         if digits:
             calibration_value_part_a = int(digits[0] + digits[-1])
             calibration_values_part_a.append(calibration_value_part_a)
@@ -24,7 +37,7 @@ def day_1(file: str) -> tuple[int, int]:
     return sum(calibration_values_part_a), sum(calibration_values_part_b)
 
 
-if __name__ == '__main__':
-    part_a, part_b = day_1('input.txt')
-    print('Calibration sum part a:', part_a)
-    print('Calibration sum part b:', part_b)
+if __name__ == "__main__":
+    part_a, part_b = day_1(Path(__file__).parent / "input.txt")
+    print("Calibration sum part a:", part_a)
+    print("Calibration sum part b:", part_b)
