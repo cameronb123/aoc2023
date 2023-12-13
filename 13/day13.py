@@ -1,6 +1,4 @@
-import copy
 from pathlib import Path
-from typing import Optional
 
 
 def get_reflection_index(pattern: list[str]) -> list[int]:
