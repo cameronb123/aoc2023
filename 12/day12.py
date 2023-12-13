@@ -1,30 +1,48 @@
 from pathlib import Path
+from functools import cache
 
 
-def get_group_lengths(arrangement: str) -> list[int]:
-    """Get the length of each group in the arrangement string up to a given index, where groups are separated by ."""
-    groups = [x for x in arrangement.split(".") if x]
-    return [len(group) for group in groups]
+@cache
+def calculate_possible_arrangements(arrangement: str, group_sizes: tuple) -> int:
+    # If there are no more groups, check the arrangement for contains broken springs
+    if not group_sizes:
+        if any(spring == "#" for spring in arrangement):
+            return 0
+        return 1
+    # If the arrangement is shorter than the sum of the separated group sizes, then we have an invalid arrangement
+    if len(arrangement) < sum(group_sizes) + len(group_sizes) - 1:
+        return 0
+    # If the arrangement is the same size as the remaining group sizes and is all broken, then we have a valid arrangement
+    if (
+        len(group_sizes) == 1
+        and len(arrangement) == group_sizes[0]
+        and all(spring in ("#", "?") for spring in arrangement)
+    ):
+        return 1
 
-
-def get_possible_arrangements(arrangement: str, i: int, group_sizes: list[int]) -> list[str]:
-    """Get all possible arrangements of the given arrangement, where ? is replaced with . or #"""
-    possible_arrangements = []
-    result_arrangements = []
-    if i == len(arrangement):
-        return [arrangement]
-    spring = arrangement[i]
-    if spring == "?":
-        working_arrangement = arrangement[:i] + "." + arrangement[i+1:]
-        broken_arrangement = arrangement[:i] + "#" + arrangement[i+1:]
-        working_group_lengths = get_group_lengths(working_arrangement)
-        broken_group_lengths = get_group_lengths(broken_arrangement)
-        possible_arrangements.extend([working_arrangement, broken_arrangement])
-    else:
-        possible_arrangements.append(arrangement)
-    for possible_arrangement in possible_arrangements:
-        result_arrangements.extend(get_possible_arrangements(possible_arrangement, i+1, group_sizes))
-    return result_arrangements
+    # Check the strings
+    # Case 1: arrangement starts with a ., so the first group is not damaged
+    # In this case, remove the arrangement and check the remainder
+    if arrangement[0] == ".":
+        return calculate_possible_arrangements(arrangement[1:], group_sizes)
+    # Case 2: arrangement starts with a #, so the first group is damaged
+    # In this case, check if the first n springs are damaged, where n is the first group size
+    elif arrangement[0] == "#":
+        next_group_size = group_sizes[0]
+        if all(
+            spring in ("#", "?") for spring in arrangement[:next_group_size]
+        ) and arrangement[next_group_size] in (".", "?"):
+            return calculate_possible_arrangements(
+                "." + arrangement[next_group_size + 1 :], group_sizes[1:]
+            )
+        else:
+            return 0
+    # Case 3: arrangement starts with a ?, so the first group is either damaged or not damaged
+    # Consider both cases
+    elif arrangement[0] == "?":
+        return calculate_possible_arrangements(
+            "." + arrangement[1:], group_sizes
+        ) + calculate_possible_arrangements("#" + arrangement[1:], group_sizes)
 
 
 def solution(file: Path, multiplier: int) -> int:
@@ -33,29 +51,14 @@ def solution(file: Path, multiplier: int) -> int:
 
     total_solutions = 0
     for row in input_values:
-        print(row)
         conditions, damaged_groups = row.split()
-        conditions = conditions * multiplier
-        damaged_groups = [int(num) for num in damaged_groups.split(",")]
-        damaged_groups = damaged_groups * multiplier
-        possible_arrangements = get_possible_arrangements(conditions, 0, damaged_groups)
-        for arrangement in possible_arrangements:
-            if get_group_lengths(arrangement) == damaged_groups:
-                total_solutions += 1
-
-
-        # groups = [x for x in conditions.split(".") if x]
-        # group_lengths = [len(group) for group in groups]
-        # print(groups, group_lengths, damaged_groups)
-        #
-        # # Remove groups where the size is exactly right (i.e. there's only one arrangement)
-        # for i in range(len(group_lengths)-1, -1, -1):
-        #     if group_lengths[i] in damaged_groups[i:]:
-        #         groups.pop(i)
-        #         damaged_groups.remove(group_lengths[i])
-        # group_lengths = [len(group) for group in groups]
-        # print(groups, group_lengths, damaged_groups)
-
+        damaged_groups = tuple([int(num) for num in damaged_groups.split(",")])
+        multiplied_conditions = "?".join([conditions] * multiplier)
+        multiplied_damaged_groups = damaged_groups * multiplier
+        solutions = calculate_possible_arrangements(
+            multiplied_conditions, multiplied_damaged_groups
+        )
+        total_solutions += solutions
     return total_solutions
 
 
@@ -63,10 +66,10 @@ if __name__ == "__main__":
     test_file = Path(__file__).parent / "test.txt"
     input_file = Path(__file__).parent / "input.txt"
     test_1 = solution(test_file, 1)
-    # test_2 = solution(test_file, 5)
     assert test_1 == 21
-    # assert test_2 == 525152
+    test_2 = solution(test_file, 5)
+    assert test_2 == 525152
     part_1 = solution(input_file, 1)
-    # part_2 = solution(input_file, 5)
+    part_2 = solution(input_file, 5)
     print("Part 1:", part_1)
-    # print("Part 2:", part_2)
+    print("Part 2:", part_2)
