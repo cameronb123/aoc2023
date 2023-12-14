@@ -41,8 +41,6 @@ def solution(file: Path, part2: bool = False) -> int:
     with open(file) as f:
         input_values = f.read().split("\n")
 
-    print(input_values)
-
     cycle_ends = []
     for cycle in range(1000000000):
         for _ in range(4):
@@ -54,9 +52,9 @@ def solution(file: Path, part2: bool = False) -> int:
                 return calculate_north_load(input_values)
             input_values = transpose_matrix(input_values)
         if input_values in cycle_ends:
-            repeating_pattern = cycle_ends[cycle_ends.index(input_values):]
+            repeating_pattern = cycle_ends[cycle_ends.index(input_values) :]
             repeat_length = len(repeating_pattern)
-            cycle = 1000000000 - (cycle+1)
+            cycle = 1000000000 - (cycle + 1)
             cycle = cycle % repeat_length
             end_value = repeating_pattern[cycle]
             return calculate_north_load(end_value)
