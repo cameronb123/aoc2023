@@ -43,18 +43,8 @@ def solution(file: Path, part2: bool = False) -> int:
 
     print(input_values)
 
-    # tilted_values = tilt_north(input_values)
-    # while input_values != tilted_values:
-    #     input_values = tilted_values.copy()
-    #     tilted_values = tilt_north(input_values)
-    #
-    # print(input_values)
-    # north_load = calculate_north_load(input_values)
-
-    north_loads = []
-    for cycle in range(1000):
-        print(f"Cycle {cycle+1}")
-        cycle_start = input_values.copy()
+    cycle_ends = []
+    for cycle in range(1000000000):
         for _ in range(4):
             tilted_values = tilt_north(input_values)
             while input_values != tilted_values:
@@ -63,10 +53,15 @@ def solution(file: Path, part2: bool = False) -> int:
             if not part2:
                 return calculate_north_load(input_values)
             input_values = transpose_matrix(input_values)
-        north_loads.append(calculate_north_load(input_values))
-        if input_values == cycle_start:
-            return calculate_north_load(input_values)
-    print(north_loads)
+        if input_values in cycle_ends:
+            repeating_pattern = cycle_ends[cycle_ends.index(input_values):]
+            repeat_length = len(repeating_pattern)
+            cycle = 1000000000 - (cycle+1)
+            cycle = cycle % repeat_length
+            end_value = repeating_pattern[cycle]
+            return calculate_north_load(end_value)
+        else:
+            cycle_ends.append(input_values)
     return calculate_north_load(input_values)
 
 
